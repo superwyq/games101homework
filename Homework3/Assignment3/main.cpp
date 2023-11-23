@@ -50,13 +50,39 @@ Eigen::Matrix4f get_model_matrix(float angle)
 Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio, float zNear, float zFar)
 {
     // TODO: Use the same projection matrix from the previous assignments
+    Eigen::Matrix4f projection;
+    
+    Eigen::Matrix4f perspective_projection = Eigen::Matrix4f::Identity();
+    perspective_projection(0,0) = zNear;
+    perspective_projection(1,1) = zNear;
+    perspective_projection(2,2) = zNear+zFar;
+    perspective_projection(2,3) = -zNear*zFar;
+    perspective_projection(3,2) = 1;
+    perspective_projection(3,3) = 0;
+
+    projection = perspective_projection;
+    
+    Eigen::Matrix4f ortho_scale_projection = Eigen::Matrix4f::Identity();
+    
+    float height = tan(eye_fov*CV_2PI/360)*zNear*2;
+    float width = aspect_ratio*height;
+    ortho_scale_projection(0,0) = 2/width;
+    ortho_scale_projection(1,1) = 2/height;
+    ortho_scale_projection(2,2) = 2/(zNear-zFar);
+
+    Eigen::Matrix4f ortho_trans_projection = Eigen::Matrix4f::Identity();
+    ortho_trans_projection(2,3) = -(zNear+zFar)/2;
+    projection = ortho_scale_projection*ortho_trans_projection*projection;
+    return projection;
 
 }
 
+// vertex shader,which means will shading for every vertex,so we need compute the normal for every vertex
 Eigen::Vector3f vertex_shader(const vertex_shader_payload& payload)
 {
     return payload.position;
 }
+
 
 Eigen::Vector3f normal_fragment_shader(const fragment_shader_payload& payload)
 {
@@ -78,13 +104,14 @@ struct light
     Eigen::Vector3f intensity;
 };
 
+//texture shader,which means that let kd equal to the texture color,not use the interpolated_color
 Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload& payload)
 {
     Eigen::Vector3f return_color = {0, 0, 0};
     if (payload.texture)
     {
         // TODO: Get the texture value at the texture coordinates of the current fragment
-
+        
     }
     Eigen::Vector3f texture_color;
     texture_color << return_color.x(), return_color.y(), return_color.z();
@@ -118,6 +145,7 @@ Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload& payload)
     return result_color * 255.f;
 }
 
+//phong module,which means that compute normal for every pixel[fragment],
 Eigen::Vector3f phong_fragment_shader(const fragment_shader_payload& payload)
 {
     Eigen::Vector3f ka = Eigen::Vector3f(0.005, 0.005, 0.005);
@@ -271,7 +299,8 @@ int main(int argc, const char** argv)
     auto texture_path = "hmap.jpg";
     r.set_texture(Texture(obj_path + texture_path));
 
-    std::function<Eigen::Vector3f(fragment_shader_payload)> active_shader = phong_fragment_shader;
+    std::function<Eigen::Vector3f(fragment_shader_payload)> active_shader = normal_fragment_shader;
+    //std::function just like a function have an other name,we can bind this function name to other function that meet the arg requirement
 
     if (argc >= 2)
     {
@@ -358,6 +387,7 @@ int main(int argc, const char** argv)
         {
             angle += 0.1;
         }
+        std::cout<<"running"<<std::endl;
 
     }
     return 0;

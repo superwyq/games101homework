@@ -279,7 +279,45 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t, const std::array<Eig
     // Use: payload.view_pos = interpolated_shadingcoords;
     // Use: Instead of passing the triangle's color directly to the frame buffer, pass the color to the shaders first to get the final color;
     // Use: auto pixel_color = fragment_shader(payload);
+    auto v = t.toVector4();
+    
+    float min_x = width, max_x=0;
+    float min_y = height, max_y=0;
+    for(auto vetex : t.v){
+        min_x = std::min(vetex.x(),min_x);
+        max_x = std::max(vetex.x(),max_x);
+        min_y = std::min(vetex.y(),min_y);
+        max_y = std::max(vetex.y(),max_y);       
+    }
+    Eigen::Vector3f interpolated_color;
+    Eigen::Vector3f interpolated_normal;
+    Eigen::Vector2f interpolated_texcoords;
+    Texture* texture=t.tex;
 
+    for(int x=min_x;x<max_x;x++){
+        for(int y=min_y;y<max_y;y++){
+            if(insideTriangle(x,y,t.v)){
+                auto [alpha, beta, gamma] = computeBarycentric2D(x+0.5, y+0.5, t.v);
+                float Z = 1.0 / (alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
+                float zp = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
+                zp *= Z;
+                int idex = get_index(x,y);
+                if(zp < depth_buf[idex]){
+                    Eigen::Vector2i p;
+                    p << x, y;
+                    interpolated_color = alpha*t.color[0]+beta*t.color[1]+gamma*t.color[2];
+                    interpolated_normal = alpha*t.normal[0]+beta*t.normal[1]+gamma*t.normal[2];
+                    interpolated_texcoords = alpha*t.tex_coords[0]+beta*t.tex_coords[1]+gamma*t.tex_coords[2];
+                    
+                    fragment_shader_payload payload( interpolated_color, interpolated_normal.normalized(), interpolated_texcoords, texture);
+                    payload.view_pos = alpha*view_pos[0]+beta*view_pos[1]+gamma*view_pos[2];
+                    auto color = fragment_shader(payload);
+                    set_pixel(p, color);
+                    depth_buf[idex] = zp;
+                }
+            }
+        }
+    }
  
 }
 

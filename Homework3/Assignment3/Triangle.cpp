@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <array>
 
+/// @brief include vertex coordinate,color and texture_coordiante that correspondes to vertex
 Triangle::Triangle() {
     v[0] << 0,0,0,1;
     v[1] << 0,0,0,1;
@@ -42,6 +43,8 @@ void Triangle::setTexCoord(int ind, Vector2f uv) {
     tex_coords[ind] = uv;
 }
 
+/// @brief transform a triangle to three veterx coordinate in space
+/// @return an array include 3 Eigen::Vector4f
 std::array<Vector4f, 3> Triangle::toVector4() const
 {
     std::array<Vector4f, 3> res;

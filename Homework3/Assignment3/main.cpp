@@ -78,13 +78,15 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio, float z
 
 }
 
-// vertex shader,which means will shading for every vertex,so we need compute the normal for every vertex
+/// vertex shader,which means will shading for every vertex,so we need compute the normal for every vertex
 Eigen::Vector3f vertex_shader(const vertex_shader_payload& payload)
 {
     return payload.position;
 }
 
-
+/// @brief basic normal shader for every fragment.We dont need change it, because teaching assistants have finished it.
+/// @param payload 
+/// @return the color of fragment that it should be.
 Eigen::Vector3f normal_fragment_shader(const fragment_shader_payload& payload)
 {
     Eigen::Vector3f return_color = (payload.normal.head<3>().normalized() + Eigen::Vector3f(1.0f, 1.0f, 1.0f)) / 2.f;
@@ -99,13 +101,14 @@ static Eigen::Vector3f reflect(const Eigen::Vector3f& vec, const Eigen::Vector3f
     return (2 * costheta * axis - vec).normalized();
 }
 
+/// @brief light struct conclude position and intensity[you can understand it as the power of light] message of a light
 struct light
 {
     Eigen::Vector3f position;
     Eigen::Vector3f intensity;
 };
 
-//texture shader,which means that let kd equal to the texture color,not use the interpolated_color
+///texture shader,which means that let kd equal to the texture color,not use the interpolated_color
 Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload& payload)
 {
     Eigen::Vector3f return_color = {0, 0, 0};
@@ -156,7 +159,7 @@ Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload& payload)
     return result_color * 255.f;
 }
 
-//phong module,which means that compute normal for every pixel[fragment],
+///phong module,which means that compute normal for every pixel[fragment]
 Eigen::Vector3f phong_fragment_shader(const fragment_shader_payload& payload)
 {
     Eigen::Vector3f ka = Eigen::Vector3f(0.005, 0.005, 0.005);

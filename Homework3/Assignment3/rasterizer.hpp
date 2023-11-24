@@ -13,8 +13,10 @@
 
 using namespace Eigen;
 
+/// @brief rasterizer namespace,include Buffers class,Primitive class,Rasterizer class that maybe is the biggest and most important class in this frame
 namespace rst
 {
+    /// @brief enum class,a new feature in c++ 11
     enum class Buffers
     {
         Color = 1,
@@ -57,6 +59,7 @@ namespace rst
         int col_id = 0;
     };
 
+    /// @brief the biggest class,represents the screen that we see,you can set the width and height when initializing a rasterizer
     class rasterizer
     {
     public:
